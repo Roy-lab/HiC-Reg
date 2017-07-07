@@ -1,0 +1,1778 @@
+#include <math.h>
+#include <iostream>
+#include "Variable.H"
+#include "Rule.H"
+#include "Error.H"
+#include "Evidence.H"
+#include "EvidenceManager.H"
+#include "RegressionTree.H"
+int sortfunc(const void* first, const void* second);
+
+
+RegressionTree::RegressionTree()
+{
+	testVarID=-1;	
+	parentNodeID=-1;
+	parentBranch=-1;
+	parent=NULL;
+}
+
+RegressionTree::~RegressionTree()
+{
+}
+
+int
+RegressionTree::setOutputVariable(int cid)
+{
+	classVarID=cid;
+	return 0;
+}
+
+int 
+RegressionTree::setTestVariable(int testVid)
+{
+	testVarID=testVid;
+	return 0;
+}
+
+int 
+RegressionTree::setEvidenceManager(EvidenceManager* aPtr)
+{	
+	evMgr=aPtr;
+	return 0;
+}
+
+int 
+RegressionTree::setSubtreeVariable(int sVid,const string& name)
+{
+	subtreeVarIDs[sVid]=0;
+	subtreeVarIDNameMap[sVid]=name;
+	return 0;
+}
+
+
+int 
+RegressionTree::setDataID(int dataID) 
+{
+	dataSubset.push_back(dataID);
+	return 0;
+}
+
+int
+RegressionTree::setPenalizedScore(double ascore)
+{
+	score=ascore;
+	return 0;
+}
+
+int 
+RegressionTree::setRNG(gsl_rng* aptr)
+{
+	r=aptr;
+	return 0;
+}
+
+double
+RegressionTree::getPenalizedScore()
+{
+	return score;
+}
+
+double
+RegressionTree::getTestValue()
+{
+	return testValue;
+}
+
+int 
+RegressionTree::getTestVariable()
+{
+	return testVarID;
+}
+
+INTVECT& 
+RegressionTree::getDataSubset()
+{
+	return dataSubset;
+}
+
+INTINTMAP& 
+RegressionTree::getSubtreeVariables()
+{
+	return subtreeVarIDs;
+}
+
+int
+RegressionTree::setMean(double aMean)
+{
+	mean=aMean;
+	return 0;
+}
+
+double
+RegressionTree::getMean()
+{
+	return mean;
+}
+
+double
+RegressionTree::getVariance()
+{
+	return variance;
+}
+
+int
+RegressionTree::setVariance(double aVariance)
+{
+	variance=aVariance;
+	return 0;
+}
+
+int
+RegressionTree::setMarginalEntropy(double anEntropy)
+{
+	marginalEntropy=anEntropy;
+	return 0;
+}
+	
+int
+RegressionTree::split(double atestValue, PARTITION* p)
+{
+	testValue=atestValue;
+	//This a dummy just to go over the loop
+	INTVECT varValues;
+	varValues.push_back(0);
+	varValues.push_back(1);
+	for(int i=0;i<varValues.size();i++)
+	{
+		if(p->find(varValues[i])==p->end())
+		{
+			cout <<"Trying to split a pure node!! " << endl;
+		}
+		RegressionTree* childNode=new RegressionTree;
+		childNode->setOutputVariable(classVarID);
+		childNode->setType(RegressionTree::LEAF);
+		childNode->setParentInfo(testVarID,varValues[i]);
+		childNode->setParent(this);
+		children[varValues[i]]=childNode;
+		//INTINTMAP* dataSubset=(*p)[varValues[i]];
+		INTVECT* dataSubset=(*p)[varValues[i]];
+		//for(INTINTMAP_ITER dIter=dataSubset->begin();dIter!=dataSubset->end();dIter++)
+		for(int i=0;i<dataSubset->size();i++)
+		{
+			childNode->setDataID((*dataSubset)[i]);
+		}
+		for(INTINTMAP_ITER stIter=subtreeVarIDs.begin();stIter!=subtreeVarIDs.end();stIter++)
+		{	
+			//if(stIter->first!=testVarID)
+			//{
+				childNode->setSubtreeVariable(stIter->first,subtreeVarIDNameMap[stIter->first]);	
+			//}
+		}
+	}
+	return 0;
+}
+
+int
+RegressionTree::setChildParams(INTDBLMAP* childMean, INTDBLMAP* childVariance, INTDBLMAP* childEntropy)
+{
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		RegressionTree* childNode=cIter->second;
+		double aMean=(*childMean)[cIter->first];
+		double aVariance=(*childVariance)[cIter->first];
+		double anEntropy=(*childEntropy)[cIter->first];
+		childNode->setMean(aMean);
+		childNode->setVariance(aVariance);
+		childNode->setMarginalEntropy(anEntropy);
+	}
+	return 0;
+}
+
+
+map<int,RegressionTree*>& 
+RegressionTree::getChildren()
+{
+	return children;
+}
+
+
+double 
+RegressionTree::getMarginalEntropy()
+{
+	return marginalEntropy;
+}
+
+bool
+RegressionTree::isPureNode()
+{
+	if(marginalEntropy==0)
+	{
+		return true;
+	}
+	return false;
+
+}
+
+
+RegressionTree* 
+RegressionTree::getChildAt(int varVal)
+{
+	if(children.find(varVal)==children.end())
+	{
+		return NULL;
+	}
+	return children[varVal];
+}
+
+double 
+RegressionTree::getMarginalPDF(double varVal)
+{
+	double pVal=gsl_ran_gaussian_pdf(varVal-mean,sqrt(variance));
+	return pVal;
+}
+
+
+int 
+RegressionTree::setType(RegressionTree::NodeType t)
+{
+	nType=t;
+	return 0;
+}
+
+RegressionTree::NodeType 
+RegressionTree::getType()
+{
+	return nType;
+}
+
+
+int 
+RegressionTree::setParentInfo(int pid,int bid)
+{
+	parentNodeID=pid;
+	parentBranch=bid;
+	return 0;
+}
+
+int 
+RegressionTree::getParentInfo(int& pid,int& bid)
+{
+	pid=parentNodeID;
+	bid=parentBranch;
+	return 0;	
+}
+
+
+int 
+RegressionTree::setParent(RegressionTree* aPtr)
+{
+	parent=aPtr;
+	return 0;
+}
+
+RegressionTree* 
+RegressionTree::getParent()
+{
+	return parent;
+}
+
+int 
+RegressionTree::getLeafNodes(vector<RegressionTree*>& leafNodeSet)
+{
+	if(children.size()==0)
+	{
+		leafNodeSet.push_back(this);
+		return 0;
+	}
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		RegressionTree* childTree=cIter->second;
+		if(childTree->getChildren().size()==0)
+		{
+			leafNodeSet.push_back(childTree);
+		}
+		else
+		{
+			childTree->getLeafNodes(leafNodeSet);
+		}
+	}
+
+	return 0;
+}
+
+
+int 
+RegressionTree::getTreeVars(INTINTMAP& varSet)
+{	
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		RegressionTree* childVar=cIter->second;
+		if(childVar->getChildren().size()==0)
+		{
+			continue;
+		}
+		childVar->getTreeVars(varSet);
+	}
+	if(testVarID!=-1)
+	{
+		varSet[testVarID]=0;
+	}
+	return 0;
+}
+
+int
+RegressionTree::showMe(string& starter,map<int,Variable*>& varSet)
+{
+	if(testVarID==-1)
+	{
+		return 0;
+	}
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		if(cIter->first==0)
+		{
+			cout << starter.c_str() << varSet[testVarID]->getName() << "<= " << testValue << endl;
+		}
+		else
+		{
+			cout << starter.c_str() << varSet[testVarID]->getName() << "> " << testValue << endl;
+		}
+		string newstarter(starter);
+		newstarter.append("| ");
+		cIter->second->showMe(newstarter,varSet);
+	}
+	return 0;
+}
+
+
+
+int
+RegressionTree::dumpTree(ostream& oFile,map<int,Variable*>& varSet, const char* targetName)
+{
+	if(testVarID==-1)
+	{
+		return 0;
+	}
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		RegressionTree* childNode=cIter->second;
+		if(cIter->first==0)
+		{
+			oFile << " "<< targetName <<" "<< varSet[testVarID]->getName() <<" <=" << testValue << " ";
+			if(childNode->getTestVariable()!=-1)
+			{
+				oFile  << varSet[childNode->getTestVariable()]->getName() << endl;
+				childNode->dumpTree(oFile,varSet,targetName);
+			}
+			else
+			{
+				oFile << varSet[testVarID]->getName()<<"-left" << endl;
+			}
+		}
+		else
+		{
+			oFile <<" " << targetName << " "<< varSet[testVarID]->getName() <<" >" << testValue << " ";
+			if(childNode->getTestVariable()!=-1)
+			{
+				oFile  << varSet[childNode->getTestVariable()]->getName() << endl;
+				childNode->dumpTree(oFile,varSet,targetName);
+			}
+			else
+			{
+				oFile << varSet[testVarID]->getName()<<"-right" << endl;
+			}
+		}
+	}
+	return 0;
+}
+
+/**
+* Dumps out tree to Cytoscape-friendly network file.
+* Each split in the tree becomes 2 edges. We annotate each edge with split value.
+* DC Aug 2016
+*
+* Edge was:   Target GATA3 <=0 CEBPB
+*		
+* Edge now: nodeA	etype	nodeB	splitInfo	Target
+*			GATA3_n 	split	CEBPB_n	<=0			Target
+*
+* _n uses to differentiate multiple instances of same regulator in the tree
+*** DEPRECATED -- use the one in common/Potential instead
+*/
+int
+RegressionTree::dumpTreeToNetwork(ostream& oFile,map<int,Variable*>& varSet, const char* targetName, map<int,int> &timesSeen)
+{
+	cerr << "DEPRECATED FUNCTION: Use Potential::dumpTree instead of RegressionTree::dumpTree" << endl;
+	if(testVarID==-1)
+	{
+		return 0;
+	}
+
+	// get the name/instance of the test variable -- applies to both left and right
+	char testVarName[1024];
+	sprintf(testVarName, "%s_%d", varSet[testVarID]->getName().c_str(), timesSeen[testVarID]);
+	
+	string splitCond;
+	string leafType;
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		RegressionTree* childNode=cIter->second;
+		int dataBelow;
+		
+		// is potential leaf node left or right child?
+		if(cIter->first==0)	
+		{
+			splitCond="<="; // first child, left
+			leafType="-left"; // first child
+		} else
+		{
+			splitCond=">";	// second child, right
+			leafType="-right"; // second child
+		}
+
+		// tab-delim fields: parent "split" child splitCondition targetName
+		
+		// parent "split"
+		oFile << testVarName << "\tsplit";
+		
+		if(childNode->getTestVariable()!=-1)
+		{
+			// parent "split" child
+			
+			char childName[1024];
+			int cv=childNode->getTestVariable();
+			
+			// increment child HERE
+			timesSeen[cv]++;
+			
+			sprintf(childName, "%s_%d", varSet[cv]->getName().c_str(), timesSeen[cv]);
+			oFile  << "\t" << childName;
+			
+			// weird if child name is same as parent
+			if (strcmp(testVarName, childName)==0)
+			{
+				cout << "Splitting on same variable a second time" << endl;
+			}
+			
+			// how many nodes below the child? 
+			dataBelow=childNode->getDataSubset().size();
+			
+		}
+		else
+		{
+			// parent "split" parent-leafType
+			
+			// how many nodes in this leaf?
+			// how many nodes below the child? 
+			// TODO: sometimes this value looks super weird -- no data below??
+			dataBelow=childNode->getDataSubset().size();
+			
+			oFile << "\t" << testVarName << leafType;
+		}
+		
+		
+		// parent "split" child [<=/<]testValue targetName
+		oFile << "\t" << splitCond << testValue << "\t" << targetName << "\t" << dataBelow << endl;
+		
+		// keep going down the tree...
+		if(childNode->getTestVariable()!=-1)
+		{
+			childNode->dumpTreeToNetwork(oFile,varSet,targetName, timesSeen);
+		}
+	}
+		
+	return 0;
+}
+
+int
+RegressionTree::clear()
+{
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		cIter->second->clear();
+		delete cIter->second;
+	}
+	children.clear();
+	dataSubset.clear();
+	subtreeVarIDs.clear();
+	return 0;
+}
+
+int
+RegressionTree::generateRuleSet()
+{
+	vector<RegressionTree*> leafNodes;
+	getLeafNodes(leafNodes);
+	for(int l=0;l<leafNodes.size();l++)
+	{
+		RegressionTree* aLeaf=leafNodes[l];
+		Rule* aRule=new Rule;
+		ruleSet.push_back(aRule);
+		aRule->addCondition(aLeaf,-1);
+		int pid;
+		int parentBranch;
+		aLeaf->getParentInfo(pid,parentBranch);
+		aRule->setCoverage(aLeaf->getDataSubset().size());
+		aRule->setMarginalEntropy(aLeaf->getMarginalEntropy());
+		RegressionTree* aParent=aLeaf->getParent();
+		while(aParent!=NULL)
+		{
+			aRule->addCondition(aParent,parentBranch);
+			int newParentBranch;
+			aParent->getParentInfo(pid,newParentBranch);
+			parentBranch=newParentBranch;
+			RegressionTree* newParent=aParent->getParent();
+			aParent=newParent;
+		}
+	}
+	cout <<"Generated " << ruleSet.size() << " new rules" << endl;
+	orderRulesByCoverage();
+	return 0;
+}
+
+
+vector<Rule*>& 
+RegressionTree::getRuleSet()
+{
+	return ruleSet;
+}
+
+
+int 
+RegressionTree::setCodingLength(double alen)
+{
+	codingLength=alen;
+	return 0;
+}
+
+double 
+RegressionTree::getCodingLength()
+{
+	return codingLength;
+}
+
+
+int 
+RegressionTree::genGenanatomy(ostream& oFile,map<int,Variable*>& varSet)
+{
+	if(children.size()>0)
+	{
+		oFile <<"<Split Type=\"OneRegulator\">" << endl; 
+		oFile <<"<SplitData Regulator=\""<< varSet[testVarID]->getName() <<"\"" 
+			<<" SplitPoint=\""<<testValue << "\""  
+			<< " Type=\"less\" pvalue=\"0\"/>" << endl; 
+	}
+	for(map<int,RegressionTree*>::iterator cIter=children.begin();cIter!=children.end();cIter++)
+	{
+		RegressionTree* child=cIter->second;
+		if(cIter->first==0)
+		{
+			if(child->getTestVariable()==-1)
+			{
+				oFile <<"<Left>" << endl;
+				child->genGenanatomy(oFile,varSet);
+				oFile <<"</Left>" << endl;
+			}
+		}
+		else
+		{
+			if(child->getTestVariable()==-1)
+			{
+				oFile <<"<Right>"<< endl;
+				child->genGenanatomy(oFile,varSet);
+				oFile <<"</Right>" << endl;
+			}
+		}	
+	}
+	oFile <<"</Split>";
+	return 0;
+}
+
+int
+RegressionTree::orderRulesByCoverage()
+{
+	for(int i=0;i<ruleSet.size();i++)
+	{
+		for(int j=i+1;j<ruleSet.size();j++)
+		{
+			Rule* rule1=ruleSet[i];
+			Rule* rule2=ruleSet[j];
+			if(rule1->getCoverage()<rule2->getCoverage())
+			{
+				ruleSet[i]=rule2;
+				ruleSet[j]=rule1;
+			}
+		}
+	}
+	return 0;
+}
+
+int
+RegressionTree::learn(double lambda, int minLeafSize,int varsToSample)
+{
+	estimateMarginal();
+	//This is where we do the learning loop from populateMe in the Potential class
+	RegressionTree* currNode=this;
+	currentLeafNodes.push(currNode);
+	int splitCnt=1;
+	map<int,int> nodeLevel;
+	INTINTMAP& subtreeVars=currNode->getSubtreeVariables();
+	INTVECT subtreeVarID_vect;
+	for(INTINTMAP_ITER mbIter=subtreeVars.begin();mbIter!=subtreeVars.end();mbIter++)
+	{
+		subtreeVarID_vect.push_back(mbIter->first);	
+	}
+	while(!currentLeafNodes.empty())
+	{
+
+		PARTITION* p=NULL;
+		INTVECT* ss1=NULL;
+		INTVECT* ss2=NULL;
+		int ss1s=0;
+		int ss2s=0;
+		//cout << "IN THE LOOP!" << endl;
+		double maxGain=0;
+		int testVarID=-1;
+		double testValue=0;
+
+		RegressionTree* currNode=currentLeafNodes.front();
+		//INTINTMAP& currSubset=currNode->getDataSubset();
+		vector<int>& currSubset=currNode->getDataSubset();
+		currentLeafNodes.pop();
+		int pNode;
+		int branch;
+		currNode->getParentInfo(pNode,branch);
+		//cout <<"Splitting child  node of " << pNode <<" branch " << branch << endl;
+		//Instead of splitting on all subtreeVars, we should use a subset of variables
+		//INTINTMAP& subtreeVars=currNode->getSubtreeVariables();
+		//for(INTINTMAP_ITER mbIter=subtreeVars.begin();mbIter!=subtreeVars.end();mbIter++)
+		INTINTMAP& subtreeVars=currNode->getSubtreeVariables();
+		INTINTMAP varsTobesampled;
+		generateVarsTobeSampled(varsTobesampled,subtreeVarID_vect,varsToSample);
+		//for(INTINTMAP_ITER mbIter=subtreeVars.begin();mbIter!=subtreeVars.end();mbIter++)
+		for(INTINTMAP_ITER mbIter=varsTobesampled.begin();mbIter!=varsTobesampled.end();mbIter++)
+		{
+			/*if(strcmp(subtreeVarIDNameMap[mbIter->first].c_str(),"Distance")==0)
+			{
+				cout <<"Stop here!"<<endl;
+			}*/
+			//Partition the training set into sets based on the values of mbIter->first
+			//but because this is real, we consider two splits
+			//0 corresponds to the partition using testVar<threshold and 1 corresponds to
+			//the partition using testVar>threshold
+			double gain=-1;
+			double splitValue;
+			int varId=mbIter->first;
+			
+			// will return -1 if split not possible? not currently implemented.
+			// constraints on leaf size?? 
+			int canSplit=getPartitions_Cached(mbIter->first,splitValue,currNode->getMarginalEntropy(),currSubset,gain);
+			if(canSplit==0 && gain> maxGain)
+			{
+				maxGain=gain;
+				testVarID=mbIter->first;
+				testValue=splitValue;
+				//cout << "UPDATE VAR:" << testVarID << "," << testValue << endl;
+				p=allPartitions[testVarID];
+				ss1=(*p)[0];
+				ss2=(*p)[1];
+				ss1s=ss1->size();
+				ss2s=ss2->size();
+				//cout << "HERE WE GO!" << ss1->size() << "," << ss2->size() << endl;
+			}
+		}
+		varsTobesampled.clear();
+		if(testVarID==-1)
+		{
+			clearCache();
+			//cout << "No good split found " << testVarID << endl;
+			continue;
+		}
+		//cout << "TestVar: " << testVarID << " Name: "<< subtreeVarIDNameMap[testVarID] << ", Split: " << testValue << endl;
+		
+		int testNodeLevel=0;
+		if(pNode!=-1)
+		{
+			int plevel=nodeLevel[pNode];
+			testNodeLevel=plevel+1;
+		}
+		double penalty=2*lambda*log(1+testNodeLevel);
+		/*if((maxGain-penalty)<=0)
+		{
+			clearCache();
+			continue;
+		}*/
+		//PARTITION* p=allPartitions[testVarID];
+		//INTINTMAP* ss1=(*p)[0];
+		//INTINTMAP* ss2=(*p)[1];
+		// I think this means we stop splitting because the leaf size hit the minimum
+		if( (ss1s<minLeafSize) && (ss2s<minLeafSize))
+		{
+			clearCache();
+			//cout << "TOO SMALL!" << ss1s << "," << ss2s << endl;
+			continue;
+		}
+		nodeLevel[testVarID]=testNodeLevel;
+		splitCnt++;
+		//Variable* var=varSet[testVarID];
+		//cout <<"Gain: "<<maxGain << " for test var "<< testVarID << " " << var->getName().c_str() << " at level " << nodeLevel[testVarID] << endl;
+		
+		// report parent
+		RegressionTree* parent=currNode->getParent();
+		if (parent!= NULL)
+		{
+			int parentVar=currNode->getParent()->getTestVariable();
+			//cout << "Parent was " << varSet[parentVar]->getName().c_str() << endl;
+		}
+		
+		currNode->setTestVariable(testVarID);
+		currNode->setPenalizedScore(maxGain-penalty);
+		//Make new leaf nodes using the values of testValue
+		currNode->setType(RegressionTree::NONLEAF);
+		currNode->split(testValue,allPartitions[testVarID]);
+		currNode->setChildParams(allMeans[testVarID],allVariances[testVarID],allMarginalEntropy[testVarID]);
+		//computeCodingLength(currNode);
+		map<int,RegressionTree*>& newLeaves=currNode->getChildren();
+		for(map<int,RegressionTree*>::iterator lIter=newLeaves.begin();lIter!=newLeaves.end();lIter++)
+		{
+			//if((!lIter->second->isPureNode()) && (lIter->second->getDataSubset().size()>10) && (testNodeLevel<1))
+			// DC asks -- should that be >= minLeafSize or > minLeafSize? (original)
+			// doesn't matter if leaf size is 1 -- always pure... but otherwise??
+			if((!lIter->second->isPureNode()) && (lIter->second->getDataSubset().size()>minLeafSize))
+			//if(!lIter->second->isPureNode())
+			{
+				currentLeafNodes.push(lIter->second);
+			}
+			//lIter->second->setCodingLength(1.0);
+		}
+		clearCache();
+	}
+	subtreeVarID_vect.clear();
+	return 0;
+}
+
+
+int
+RegressionTree::learn_Pairwise(double lambda, int minLeafSize,int varsToSample)
+{
+	queue<RegressionTree*> currentLeafNodes_E;
+	queue<RegressionTree*> currentLeafNodes_P;
+	estimateMarginal();
+	//This is where we do the learning loop from populateMe in the Potential class
+	RegressionTree* currNode=this;
+	//Let's assume we will first split on a _P feature
+	currentLeafNodes_P.push(currNode);
+	int splitCnt=1;
+	map<int,int> nodeLevel;
+	INTINTMAP& subtreeVars=currNode->getSubtreeVariables();
+	INTVECT subtreeVarID_vect_E;
+	INTVECT subtreeVarID_vect_P;
+	for(INTINTMAP_ITER mbIter=subtreeVars.begin();mbIter!=subtreeVars.end();mbIter++)
+	{
+		if(strstr(subtreeVarIDNameMap[mbIter->first].c_str(),"_E")!=NULL)
+		{
+			subtreeVarID_vect_E.push_back(mbIter->first);	
+		}
+		else
+		{
+			subtreeVarID_vect_P.push_back(mbIter->first);	
+		}
+	}
+	bool flipMe=true;
+	while(!currentLeafNodes_E.empty() || !currentLeafNodes_P.empty())
+	{
+
+		PARTITION* p=NULL;
+		INTVECT* ss1=NULL;
+		INTVECT* ss2=NULL;
+		int ss1s=0;
+		int ss2s=0;
+		//cout << "IN THE LOOP!" << endl;
+		double maxGain=0;
+		int testVarID=-1;
+		double testValue=0;
+
+		RegressionTree* currNode=NULL;
+		//INTINTMAP& currSubset=currNode->getDataSubset();
+		if(flipMe)
+		{
+			if(!currentLeafNodes_P.empty())
+			{
+				currNode=currentLeafNodes_P.front();
+				currentLeafNodes_P.pop();
+			}
+			else
+			{
+				//If it is the turn of the _P queue but there are no nodes, move to the _E queue
+				flipMe=false;
+				continue;
+			}
+		}	
+		else 
+		{
+			if(!currentLeafNodes_E.empty())
+			{
+				currNode=currentLeafNodes_E.front();
+				currentLeafNodes_E.pop();
+			}
+			else
+			{
+				//If it is the turn of the _E queue but there are no nodes, move to the _P queue
+				flipMe=true;
+				continue;
+			}
+		}
+		if(currNode==NULL)
+		{
+			cout <<"This is wrong... we are popping a null node for flipMe=" << flipMe << endl;
+		}
+		vector<int>& currSubset=currNode->getDataSubset();
+		int pNode;
+		int branch;
+		currNode->getParentInfo(pNode,branch);
+		//cout <<"Splitting child  node of " << pNode <<" branch " << branch << endl;
+		//Instead of splitting on all subtreeVars, we should use a subset of variables
+		//INTINTMAP& subtreeVars=currNode->getSubtreeVariables();
+		//for(INTINTMAP_ITER mbIter=subtreeVars.begin();mbIter!=subtreeVars.end();mbIter++)
+		//INTINTMAP& subtreeVars=currNode->getSubtreeVariables();
+		INTINTMAP varsTobesampled;
+		if(flipMe)
+		{
+			generateVarsTobeSampled(varsTobesampled,subtreeVarID_vect_E,varsToSample);
+		}
+		else
+		{
+			generateVarsTobeSampled(varsTobesampled,subtreeVarID_vect_P,varsToSample);
+		}
+		//for(INTINTMAP_ITER mbIter=subtreeVars.begin();mbIter!=subtreeVars.end();mbIter++)
+		for(INTINTMAP_ITER mbIter=varsTobesampled.begin();mbIter!=varsTobesampled.end();mbIter++)
+		{
+			/*if(strcmp(subtreeVarIDNameMap[mbIter->first].c_str(),"Distance")==0)
+			{
+				cout <<"Stop here!"<<endl;
+			}*/
+			//Partition the training set into sets based on the values of mbIter->first
+			//but because this is real, we consider two splits
+			//0 corresponds to the partition using testVar<threshold and 1 corresponds to
+			//the partition using testVar>threshold
+			double gain=-1;
+			double splitValue;
+			int varId=mbIter->first;
+			//We will split on this is node only if its test variable was the opposite type as specified by the flag status
+			// will return -1 if split not possible? not currently implemented.
+			// constraints on leaf size?? 
+			int canSplit=getPartitions_Cached(mbIter->first,splitValue,currNode->getMarginalEntropy(),currSubset,gain);
+			if(canSplit==0 && gain> maxGain)
+			{
+				maxGain=gain;
+				testVarID=mbIter->first;
+				testValue=splitValue;
+				//cout << "UPDATE VAR:" << testVarID << "," << testValue << endl;
+				p=allPartitions[testVarID];
+				ss1=(*p)[0];
+				ss2=(*p)[1];
+				ss1s=ss1->size();
+				ss2s=ss2->size();
+				//cout << "HERE WE GO!" << ss1->size() << "," << ss2->size() << endl;
+			}
+		}
+		varsTobesampled.clear();
+		if(testVarID==-1)
+		{
+			clearCache();
+			//cout << "No good split found " << testVarID << endl;
+			continue;
+		}
+		cout << "TestVar: " << testVarID << " Name: "<< subtreeVarIDNameMap[testVarID] << ", Split: " << testValue << endl;
+		int testNodeLevel=0;
+		if(pNode!=-1)
+		{
+			int plevel=nodeLevel[pNode];
+			testNodeLevel=plevel+1;
+		}
+		double penalty=2*lambda*log(1+testNodeLevel);
+		/*if((maxGain-penalty)<=0)
+		{
+			clearCache();
+			continue;
+		}*/
+		//PARTITION* p=allPartitions[testVarID];
+		//INTINTMAP* ss1=(*p)[0];
+		//INTINTMAP* ss2=(*p)[1];
+		// I think this means we stop splitting because the leaf size hit the minimum
+		if( (ss1s<minLeafSize) && (ss2s<minLeafSize))
+		{
+			clearCache();
+			//cout << "TOO SMALL!" << ss1s << "," << ss2s << endl;
+			continue;
+		}
+		nodeLevel[testVarID]=testNodeLevel;
+		splitCnt++;
+		//Variable* var=varSet[testVarID];
+		//cout <<"Gain: "<<maxGain << " for test var "<< testVarID << " " << var->getName().c_str() << " at level " << nodeLevel[testVarID] << endl;
+		
+		// report parent
+		RegressionTree* parent=currNode->getParent();
+		if (parent!= NULL)
+		{
+			int parentVar=currNode->getParent()->getTestVariable();
+			//cout << "Parent was " << varSet[parentVar]->getName().c_str() << endl;
+		}
+		
+		currNode->setTestVariable(testVarID);
+		currNode->setPenalizedScore(maxGain-penalty);
+		//Make new leaf nodes using the values of testValue
+		currNode->setType(RegressionTree::NONLEAF);
+		currNode->split(testValue,allPartitions[testVarID]);
+		currNode->setChildParams(allMeans[testVarID],allVariances[testVarID],allMarginalEntropy[testVarID]);
+		//computeCodingLength(currNode);
+		map<int,RegressionTree*>& newLeaves=currNode->getChildren();
+		for(map<int,RegressionTree*>::iterator lIter=newLeaves.begin();lIter!=newLeaves.end();lIter++)
+		{
+			//if((!lIter->second->isPureNode()) && (lIter->second->getDataSubset().size()>10) && (testNodeLevel<1))
+			// DC asks -- should that be >= minLeafSize or > minLeafSize? (original)
+			// doesn't matter if leaf size is 1 -- always pure... but otherwise??
+			if((!lIter->second->isPureNode()) && (lIter->second->getDataSubset().size()>minLeafSize))
+			//if(!lIter->second->isPureNode())
+			{
+				if(flipMe)
+				{
+					currentLeafNodes_E.push(lIter->second);
+				}
+				else
+				{
+					currentLeafNodes_P.push(lIter->second);
+				}
+			}
+			//lIter->second->setCodingLength(1.0);
+		}
+		clearCache();
+		//Flip only if we have found a successful split
+		if(flipMe)
+		{
+			flipMe=false;
+		}
+		else 
+		{
+			flipMe=true;
+		}
+	}
+	subtreeVarID_vect_E.clear();
+	subtreeVarID_vect_P.clear();
+	return 0;
+}
+
+int
+RegressionTree::generateVarsTobeSampled(INTINTMAP& varSet,INTVECT& allVarSet,int varCnt)
+{
+	int size=allVarSet.size();
+	INTINTMAP usedInit;
+	double step=1.0/(double)size;
+	//gsl_rng* r=gsl_rng_alloc(gsl_rng_default);
+	for(int i=0;i<varCnt;i++)
+	{
+		double rVal=gsl_ran_flat(r,0,1);
+		int rind=(int)(rVal/step);
+		while(usedInit.find(rind)!=usedInit.end())
+		{
+			rVal=gsl_ran_flat(r,0,1);
+			rind=(int)(rVal/step);
+		}
+		int vid=allVarSet[rind];
+		usedInit[rind]=0;
+		varSet[vid]=0;
+	}
+	usedInit.clear();
+	return 0;
+}
+
+
+//This function is not handling duplicates properly after the first is false. So we are just going to compute the subentropy from the beginning to the end. The caching part needs to be fixed.
+int 
+RegressionTree::getPartitions_Cached_Buggy(int vId, double& splitValue,double marginalEntropy, vector<int>& dataSet, double& infoGain)
+{
+	//Here we want to partition dataSet into smaller partitions corresponding to the different values of
+	//vId. We also want to compute the entropy of the class variable using the partitions. So we store
+	//for each value of variable vId, the distribution of the class variable.
+	vector<int> sortedInd;
+	vector<double> sortedValues;
+	vector<int> sortedInd2;
+	vector<double> sortedValues2;
+	Pair** toSort=new Pair*[dataSet.size()];
+	int id=0;
+	//for(INTINTMAP_ITER dIter=dataSet.begin();dIter!=dataSet.end();dIter++)
+	for(int dIter=0;dIter<dataSet.size();dIter++)
+	{
+		EMAP* evSet=evMgr->getEvidenceAt(dataSet[dIter]);
+		if(evSet->find(vId)==evSet->end())
+		{
+			cout <<"No evidence value for " << vId << endl;
+			return -1;
+		}
+		Evidence* evid=(*evSet)[vId];
+		double attrVal=evid->getEvidVal();
+		//sortedInd.push_back(dIter->first);
+		//sortedValues.push_back(attrVal);
+		Pair* apair=new Pair;
+		toSort[id]=apair;
+		//apair->ind=dIter;
+		apair->ind=dataSet[dIter];
+		apair->val=attrVal;
+		id++;
+	}
+	//sortAttrVals(sortedValues,sortedInd);
+	//sortAttrVals_Qsort(toSort,dataSet.size(),sortedValues2,sortedInd2);
+	sortAttrVals_Qsort(toSort,dataSet.size(),sortedValues,sortedInd);
+	for(int i=0;i<dataSet.size();i++)
+	{
+		delete toSort[i];
+	}
+	delete[] toSort;
+	int partId=1;
+	// DC add
+	// start at minLeafSize, actually?
+	// make sure long enough
+	/*if (minLeafSize > sortedValues.size())
+	{
+		cerr << "Trying to split on a dataset that is too small" << endl;
+		return -1;
+	}
+	partId=minLeafSize;*/
+
+	
+	double maxGain=0;
+	int splitId=-1;
+	double bestEntropyLeft=0;
+	double bestMeanLeft=0;
+	double bestVarianceLeft=0;
+	double bestEntropyRight=0;
+	double bestMeanRight=0;
+	double bestVarianceRight=0;
+	bool first=true;
+	double sumLeft;
+	double sumsqLeft;
+	double sumRight;
+	double sumsqRight;
+
+	// what is effect of the -2? right-hand side must have at least one gene
+	// but actually, we shouldn't be able to split such that either 
+	// side is less than minLeafSize
+	// We seem to start with atleast two values because partId=1.
+	//
+	// SR: I think I put it as -2 because we did not want anything on the right with no values
+	while(partId<sortedValues.size()-2)
+	// DC proposes this...
+	//while(partId<(sortedValues.size()-minLeafSize-1))
+	{		
+		double attrVal=sortedValues[partId];
+		
+		// we only want to consider unique values!
+		// weird corner case: fewer unique values than minLeafSize.
+		// in that case, we just don't want to split.
+		int leftId=partId+1;
+		while(leftId<sortedValues.size() && sortedValues[leftId]==attrVal)
+		{
+			//cout <<"leftid " << leftId << " incrementing over " << attrVal <<  endl;
+			leftId++;
+		}
+		partId=leftId-1;
+		leftId--;
+		
+		// are there enough left?
+		/*if (partId>(sortedValues.size()-minLeafSize-1))
+		{
+			cerr << "Trying to split on a dataset with too few unique values to make a leaf" << endl;
+			return -1;
+		}*/
+		
+		//Now all datapoints from 0 to partID+leftID are less than or equal to attrVal
+		int dId=sortedInd[partId];
+		EMAP* evMap=evMgr->getEvidenceAt(dId);
+		double classVarVal=(*evMap)[classVarID]->getEvidVal();
+
+		double classEntrLeft=0;
+		double meanLeft=0;
+		double varianceLeft=0;
+		if(first)
+		{
+			getSubEntropy(sortedInd,0,partId,meanLeft,varianceLeft,classEntrLeft);
+			//This is +1 because we assume partId is the actual index which is always 1 less.
+			sumLeft=meanLeft*(partId+1);
+			sumsqLeft=(varianceLeft*partId) + (meanLeft*meanLeft*(partId+1));
+		}
+		else
+		{
+			double newsumLeft=sumLeft+classVarVal;
+			double newsumsqLeft=sumsqLeft+(classVarVal*classVarVal);
+			meanLeft=newsumLeft/(partId+1);
+			varianceLeft=(((partId+1)*meanLeft*meanLeft) + newsumsqLeft - (2*newsumLeft*meanLeft))/partId;
+			/*double meanLeft1=0;
+			double varianceLeft1=0;
+			getSubEntropy(sortedInd,0,partId,meanLeft1,varianceLeft1,classEntrLeft);
+			if(((meanLeft-meanLeft1)!=0) || ((varianceLeft-varianceLeft1)!=0))
+			{
+				cout <<"LEFT mismatch! ";
+				cout <<"Cached m: " << meanLeft << " v: " << varianceLeft << " true m: "<< meanLeft1 << " v: " << varianceLeft1 << endl;
+			}*/
+			getSubEntropy(meanLeft,varianceLeft,classEntrLeft);
+			sumLeft=newsumLeft;
+			sumsqLeft=newsumsqLeft;
+		}
+		double classEntrRight=0;
+		double meanRight=0;
+		double varianceRight=0;
+		double elemCnt=(double) (sortedValues.size()-partId-1);
+		if(first)
+		{
+			getSubEntropy(sortedInd,partId+1,sortedValues.size()-1,meanRight,varianceRight,classEntrRight);
+			sumRight=meanRight*(elemCnt);
+			sumsqRight=(varianceRight*(elemCnt-1)) + (meanRight*meanRight*elemCnt);
+		}
+		else
+		{
+			double newsumRight=sumRight-classVarVal;
+			double newsumsqRight=sumsqRight-(classVarVal*classVarVal);
+			meanRight=newsumRight/elemCnt;
+			varianceRight=((elemCnt*meanRight*meanRight) + (newsumsqRight) - (2*newsumRight*meanRight))/(elemCnt-1);
+		/*	double meanRight1=0;
+			double varianceRight1=0;
+
+			getSubEntropy(sortedInd,partId+1,sortedValues.size()-1,meanRight1,varianceRight1,classEntrRight);
+			if(((meanRight-meanRight1)!=0) || ((varianceRight-varianceRight1)!=0))
+			{
+				cout <<"RIGHT mismatch! ";
+				cout <<"Cached m: " << meanRight << " v: " << varianceRight << " true m: "<< meanRight1 << " v: " << varianceRight1 << endl;
+			}*/
+			getSubEntropy(meanRight,varianceRight,classEntrRight);
+			sumRight=newsumRight;
+			sumsqRight=newsumsqRight;
+		}
+		//Now compute the new gain
+		double weightedEntropy=0;
+		double total1=((double)(partId+1));
+		double frac1=total1/((double)dataSet.size());
+		double frac2=1-frac1;
+		if(frac1>0 && frac2>0)
+		{
+			weightedEntropy=(frac1*classEntrLeft)+ (frac2*classEntrRight);
+			double currInfoGain=marginalEntropy-weightedEntropy;
+			if(currInfoGain>maxGain)
+			{
+				maxGain=currInfoGain;
+				splitId=partId;
+				splitValue=sortedValues[partId];
+				bestEntropyLeft=classEntrLeft;
+				bestMeanLeft=meanLeft;
+				bestVarianceLeft=varianceLeft;
+				bestEntropyRight=classEntrRight;
+				bestMeanRight=meanRight;
+				bestVarianceRight=varianceRight;
+			}
+		}
+		partId=partId+1;
+	//	first=false;
+	}
+	//if two branches cannot be found, we should not split
+	if(splitId==partId)
+	{
+		return -1;
+	}
+	infoGain=maxGain;
+	PARTITION* partition=new PARTITION;
+	INTDBLMAP* mean=new INTDBLMAP; 
+	INTDBLMAP* variance=new INTDBLMAP; 
+	INTDBLMAP* entropy=new INTDBLMAP;
+
+	for(int i=0;i<sortedInd.size();i++)
+	{
+		int pseudoVal=-1;
+		if(i<=splitId)
+		{
+			pseudoVal=0;
+		}
+		else
+		{
+			pseudoVal=1;
+		}
+		//INTINTMAP* apart=NULL;
+		INTVECT* apart=NULL;
+		if(partition->find(pseudoVal)==partition->end())
+		{
+			//apart=new INTINTMAP;
+			apart=new INTVECT;
+			(*partition)[pseudoVal]=apart;
+		}
+		else
+		{
+			apart=(*partition)[pseudoVal];
+		}
+		//(*apart)[sortedInd[i]]=0;
+		apart->push_back(sortedInd[i]);
+	}
+	(*mean)[0]=bestMeanLeft;
+	(*mean)[1]=bestMeanRight;
+	(*variance)[0]=bestVarianceLeft;
+	(*variance)[1]=bestVarianceRight;
+	(*entropy)[0]=bestEntropyLeft;
+	(*entropy)[1]=bestEntropyRight;
+	allPartitions[vId]=partition;
+	allMeans[vId]=mean;
+	allVariances[vId]=variance;
+	allMarginalEntropy[vId]=entropy;
+	return 0;
+
+}
+
+
+//Fixing this version to make sure we are doing the sums and sumofsq properly.
+//We need to maintain three sums: sum_left, sum_middle and sum_right, and their corresponding sum of squareds
+int 
+RegressionTree::getPartitions_Cached(int vId, double& splitValue,double marginalEntropy, vector<int>& dataSet, double& infoGain)
+{
+	//Here we want to partition dataSet into smaller partitions corresponding to the different values of
+	//vId. We also want to compute the entropy of the class variable using the partitions. So we store
+	//for each value of variable vId, the distribution of the class variable.
+	vector<int> sortedInd;
+	vector<double> sortedValues;
+	vector<int> sortedInd2;
+	vector<double> sortedValues2;
+	Pair** toSort=new Pair*[dataSet.size()];
+	int id=0;
+	//for(INTINTMAP_ITER dIter=dataSet.begin();dIter!=dataSet.end();dIter++)
+	for(int dIter=0;dIter<dataSet.size();dIter++)
+	{
+		EMAP* evSet=evMgr->getEvidenceAt(dataSet[dIter]);
+		if(evSet->find(vId)==evSet->end())
+		{
+			cout <<"No evidence value for " << vId << endl;
+			return -1;
+		}
+		Evidence* evid=(*evSet)[vId];
+		double attrVal=evid->getEvidVal();
+		//sortedInd.push_back(dIter->first);
+		//sortedValues.push_back(attrVal);
+		Pair* apair=new Pair;
+		toSort[id]=apair;
+		//apair->ind=dIter;
+		apair->ind=dataSet[dIter];
+		apair->val=attrVal;
+		id++;
+	}
+	//sortAttrVals(sortedValues,sortedInd);
+	//sortAttrVals_Qsort(toSort,dataSet.size(),sortedValues2,sortedInd2);
+	sortAttrVals_Qsort(toSort,dataSet.size(),sortedValues,sortedInd);
+	for(int i=0;i<dataSet.size();i++)
+	{
+		delete toSort[i];
+	}
+	delete[] toSort;
+	int partId=1;
+	// DC add
+	// start at minLeafSize, actually?
+	// make sure long enough
+	/*if (minLeafSize > sortedValues.size())
+	{
+		cerr << "Trying to split on a dataset that is too small" << endl;
+		return -1;
+	}
+	partId=minLeafSize;*/
+
+	
+	double maxGain=0;
+	int splitId=-1;
+	double bestEntropyLeft=0;
+	double bestMeanLeft=0;
+	double bestVarianceLeft=0;
+	double bestEntropyRight=0;
+	double bestMeanRight=0;
+	double bestVarianceRight=0;
+	bool first=true;
+	double sumLeft=0;
+	double sumsqLeft=0;
+	double sumRight=0;
+	double sumsqRight=0;
+	double sumMiddle=0;
+	double sumsqMiddle=0;
+
+	// what is effect of the -2? right-hand side must have at least one gene
+	// but actually, we shouldn't be able to split such that either 
+	// side is less than minLeafSize
+	// We seem to start with atleast two values because partId=1.
+	//
+	// SR: I think I put it as -2 because we did not want anything on the right with no values
+	while(partId<sortedValues.size()-2)
+	// DC proposes this...
+	//while(partId<(sortedValues.size()-minLeafSize-1))
+	{		
+		double attrVal=sortedValues[partId];
+		int dId=sortedInd[partId];
+		EMAP* evMap=evMgr->getEvidenceAt(dId);
+		double classVarVal=(*evMap)[classVarID]->getEvidVal();
+		sumMiddle=classVarVal;
+		sumsqMiddle=classVarVal*classVarVal;
+		// we only want to consider unique values!
+		// weird corner case: fewer unique values than minLeafSize.
+		// in that case, we just don't want to split.
+		int leftId=partId+1;
+		while(leftId<sortedValues.size() && sortedValues[leftId]==attrVal)
+		{
+			//cout <<"leftid " << leftId << " incrementing over " << attrVal <<  endl;
+			if(!first)
+			{
+				int dId=sortedInd[leftId];
+				EMAP* evMap=evMgr->getEvidenceAt(dId);
+				double classVarVal=(*evMap)[classVarID]->getEvidVal();
+				sumMiddle=sumMiddle+classVarVal;
+				sumsqMiddle=sumsqMiddle+(classVarVal*classVarVal);
+			}
+			leftId++;
+		}
+		partId=leftId-1;
+		leftId--;
+		
+		// are there enough left?
+		/*if (partId>(sortedValues.size()-minLeafSize-1))
+		{
+			cerr << "Trying to split on a dataset with too few unique values to make a leaf" << endl;
+			return -1;
+		}*/
+		
+		//Now all datapoints from 0 to partID+leftID are less than or equal to attrVal
+
+		double classEntrLeft=0;
+		double meanLeft=0;
+		double varianceLeft=0;
+		if(first)
+		{
+			getSubEntropy(sortedInd,0,partId,meanLeft,varianceLeft,classEntrLeft);
+			//This is +1 because we assume partId is the actual index which is always 1 less.
+			sumLeft=meanLeft*(partId+1);
+			//We just want the sum of squares of the left. So we subtract out the other stuff	
+			sumsqLeft=(varianceLeft*partId) -((meanLeft*meanLeft*(partId+1))-(sumLeft*meanLeft*2));
+		}
+		else
+		{
+			double newsumLeft=sumLeft+sumMiddle;
+			double newsumsqLeft=sumsqLeft+sumsqMiddle;
+			if(partId>0)
+			{
+				meanLeft=newsumLeft/(partId+1);
+				varianceLeft=(((partId+1)*meanLeft*meanLeft) + newsumsqLeft - (2*newsumLeft*meanLeft))/partId;
+			//	SR: Oct 20 2016, focus on sum of squared.. Don't do this. It slows down the code a lot..
+			//	varianceLeft=(((partId+1)*meanLeft*meanLeft) + newsumsqLeft - (2*newsumLeft*meanLeft));
+			}
+			else
+			{
+				meanLeft=newsumLeft;
+				varianceLeft=0;
+			}
+			/*double meanLeft1=0;
+			double varianceLeft1=0;
+			getSubEntropy(sortedInd,0,partId,meanLeft1,varianceLeft1,classEntrLeft);
+			if((fabs(meanLeft-meanLeft1)>1e-3) || (fabs(varianceLeft-varianceLeft1)>1e-3))
+			{
+				cout <<"LEFT mismatch! ";
+				cout <<"Cached m: " << meanLeft << " v: " << varianceLeft << " true m: "<< meanLeft1 << " v: " << varianceLeft1 << endl;
+			}*/
+			classEntrLeft=varianceLeft;
+			//classEntrLeft=varianceLeft1;
+			sumLeft=newsumLeft;
+			sumsqLeft=newsumsqLeft;
+		}
+		double classEntrRight=0;
+		double meanRight=0;
+		double varianceRight=0;
+		double elemCnt=(double) (sortedValues.size()-partId-1);
+		if(first)
+		{
+			getSubEntropy(sortedInd,partId+1,sortedValues.size()-1,meanRight,varianceRight,classEntrRight);
+			sumRight=meanRight*(elemCnt);
+			//Again we just want the sum of squares on the right, so we subtract out the other stuff
+			sumsqRight=(varianceRight*(elemCnt-1)) - ((meanRight*meanRight*elemCnt)-(sumRight*meanRight*2));
+		}
+		else
+		{
+			double newsumRight=sumRight-sumMiddle;
+			double newsumsqRight=sumsqRight-sumsqMiddle;
+			if(elemCnt>1)
+			{
+				meanRight=newsumRight/elemCnt;
+				varianceRight=((elemCnt*meanRight*meanRight) + (newsumsqRight) - (2*newsumRight*meanRight))/(elemCnt-1);
+			//	SR: Oct 20 2016, focus on sum of squared. Don't do this. It slows things down a lot
+				//varianceRight=((elemCnt*meanRight*meanRight) + (newsumsqRight) - (2*newsumRight*meanRight));
+			}
+			else
+			{
+				meanRight=newsumRight;
+				varianceRight=0;
+			}
+			/*double meanRight1=0;
+			double varianceRight1=0;
+
+			getSubEntropy(sortedInd,partId+1,sortedValues.size()-1,meanRight1,varianceRight1,classEntrRight);
+			if((fabs(meanRight-meanRight1)>1e-3) || (fabs(varianceRight-varianceRight1)>1e-3))
+			{
+				cout <<"RIGHT mismatch! ";
+				cout <<"Cached m: " << meanRight << " v: " << varianceRight << " true m: "<< meanRight1 << " v: " << varianceRight1 << endl;
+			}*/
+			classEntrRight=varianceRight;
+			//classEntrRight=varianceRight1;
+			sumRight=newsumRight;
+			sumsqRight=newsumsqRight;
+		}
+		//Now compute the new gain
+		double weightedEntropy=0;
+		double total1=((double)(partId+1));
+		double frac1=total1/((double)dataSet.size());
+		double frac2=1-frac1;
+		if(frac1>0 && frac2>0)
+		{
+			weightedEntropy=(frac1*classEntrLeft)+ (frac2*classEntrRight);
+			//weightedEntropy=classEntrLeft+ classEntrRight;
+			double currInfoGain=marginalEntropy-weightedEntropy;
+			if(currInfoGain>maxGain)
+			{
+				maxGain=currInfoGain;
+				splitId=partId;
+				splitValue=sortedValues[partId];
+				bestEntropyLeft=classEntrLeft;
+				bestMeanLeft=meanLeft;
+				bestVarianceLeft=varianceLeft;
+				bestEntropyRight=classEntrRight;
+				bestMeanRight=meanRight;
+				bestVarianceRight=varianceRight;
+			}
+		}
+		partId=partId+1;
+		first=false;
+	}
+	//if two branches cannot be found, we should not split
+	if(splitId==partId)
+	{
+		return -1;
+	}
+	infoGain=maxGain;
+	PARTITION* partition=new PARTITION;
+	INTDBLMAP* mean=new INTDBLMAP; 
+	INTDBLMAP* variance=new INTDBLMAP; 
+	INTDBLMAP* entropy=new INTDBLMAP;
+
+	for(int i=0;i<sortedInd.size();i++)
+	{
+		int pseudoVal=-1;
+		if(i<=splitId)
+		{
+			pseudoVal=0;
+		}
+		else
+		{
+			pseudoVal=1;
+		}
+		//INTINTMAP* apart=NULL;
+		INTVECT* apart=NULL;
+		if(partition->find(pseudoVal)==partition->end())
+		{
+			//apart=new INTINTMAP;
+			apart=new INTVECT;
+			(*partition)[pseudoVal]=apart;
+		}
+		else
+		{
+			apart=(*partition)[pseudoVal];
+		}
+		//(*apart)[sortedInd[i]]=0;
+		apart->push_back(sortedInd[i]);
+	}
+	(*mean)[0]=bestMeanLeft;
+	(*mean)[1]=bestMeanRight;
+	(*variance)[0]=bestVarianceLeft;
+	(*variance)[1]=bestVarianceRight;
+	(*entropy)[0]=bestEntropyLeft;
+	(*entropy)[1]=bestEntropyRight;
+	allPartitions[vId]=partition;
+	allMeans[vId]=mean;
+	allVariances[vId]=variance;
+	allMarginalEntropy[vId]=entropy;
+	return 0;
+
+}
+
+
+int 
+RegressionTree::getDataAtLeaf(RegressionTree* currNode, vector<int>* evidVect)
+{
+	return 0;
+}
+
+int 
+RegressionTree::clearCache()
+{
+	for(map<int,PARTITION*>::iterator pIter=allPartitions.begin();pIter!=allPartitions.end();pIter++)
+	{
+		PARTITION* sPart=pIter->second;
+		for(PARTITION_ITER spIter=sPart->begin();spIter!=sPart->end();spIter++)
+		{
+			spIter->second->clear();
+			delete spIter->second;
+		}
+		pIter->second->clear();
+		delete pIter->second;
+	}
+
+	for(map<int,INTDBLMAP*>::iterator aIter=allMeans.begin();aIter!=allMeans.end();aIter++)
+	{
+		INTDBLMAP* mean=aIter->second;
+		INTDBLMAP* variance=allVariances[aIter->first];
+		INTDBLMAP* entropy=allMarginalEntropy[aIter->first];
+		mean->clear();
+		variance->clear();
+		entropy->clear();
+		delete mean;
+		delete variance;
+		delete entropy;
+	}
+	allPartitions.clear();
+	allMeans.clear();
+	allVariances.clear();
+	allMarginalEntropy.clear();
+	return 0;
+}
+
+int 
+RegressionTree::estimateMarginal()
+{
+	marginalEntropy=0;
+	mean=0;
+	variance=0;
+	getSubEntropy(dataSubset,0,dataSubset.size()-1,mean,variance,marginalEntropy);
+	return 0;
+}
+
+int 
+RegressionTree::sortAttrVals_Qsort(RegressionTree::Pair** tosort,int elemCnt,vector<double>& sortedValues,vector<int>& sortedInd)
+{
+	qsort(tosort,elemCnt,sizeof(Pair*),&sortfunc);
+	for(int i=0;i<elemCnt;i++)
+	{
+		Pair* p=tosort[i];
+		sortedValues.push_back(p->val);
+		sortedInd.push_back(p->ind);
+	}	
+	return 0;
+}
+
+int 
+RegressionTree::getSubEntropy(vector<int>& sortedInd, int start, int end,double& mean,double& variance,double& marginalEntropy)
+{
+	marginalEntropy=0;
+	mean=0;
+	for(int i=start;i<=end;i++)
+	{
+		int dId=sortedInd[i];
+		EMAP* evMap=evMgr->getEvidenceAt(dId);
+		if(evMap==NULL)
+		{
+			cout <<"No data at "<< dId << " out of index error " << endl;
+			exit(0);
+		}
+		if(evMap->find(classVarID)==evMap->end())
+		{
+			cout <<"No value for " << classVarID << " for data pt " << dId<<endl;
+		}
+		double classVarVal=(*evMap)[classVarID]->getEvidVal();
+		mean=mean+classVarVal;
+	}
+	mean=mean/((double)(end-start+1));
+	variance=0;
+	for(int i=start;i<=end;i++)
+	{
+		int dId=sortedInd[i];
+		EMAP* evMap=evMgr->getEvidenceAt(dId);
+		double classVarVal=(*evMap)[classVarID]->getEvidVal();
+		double diff=mean-classVarVal;
+		variance=variance+(diff*diff);
+		//cout << classVarVal << " " << diff << " " << variance << endl;
+	}
+	// DC edited - zeroes wreaking havoc!
+	if (end-start==0) 
+	{
+		variance=0;
+	}
+	else
+	{	
+		//SR: Oct 20 2016, trying object as sum of squred errors. Don't do this! It slows down the code a lot. Plus weighted entropy is the MSE
+		//variance=variance;
+		variance=variance/(end-start);
+	}
+	
+	double determinant=variance;
+	double commFact=1+log(2*PI);
+	double n=1;
+	// DC edited this -- 0s wreaking havoc
+	//marginalEntropy=0.5*((n*commFact) + log(determinant));
+	marginalEntropy=variance;
+	return 0;
+}
+
+int 
+RegressionTree::getSubEntropy(double mean ,double variance,double& marginalEntropy)
+{
+	marginalEntropy=0;
+	double determinant=variance;
+	double commFact=1+log(2*PI);
+	double n=1;
+	//marginalEntropy=0.5*((n*commFact) + log(determinant));
+	marginalEntropy=variance;
+	return 0;
+}
+
+
+int 
+RegressionTree::computeCodingLength(RegressionTree* nonleafNode)
+{
+	int evidCnt=evMgr->getNumberOfEvidences();
+	int testVarID=nonleafNode->getTestVariable();
+	double minVal=0;
+	double maxVal=0;
+	//for(INTINTMAP_ITER dIter=dataSubset.begin();dIter!=dataSubset.end();dIter++)
+	if(minValMap.find(testVarID)==minValMap.end())
+	{
+		for(int e=0;e<evidCnt;e++)
+		{
+			EMAP* evMap=evMgr->getEvidenceAt(e);
+			double aVal=(*evMap)[testVarID]->getEvidVal();
+			if(e==0)
+			{
+				minVal=aVal;
+				maxVal=aVal;
+			}
+			else
+			{
+				if(aVal<minVal)
+				{
+					minVal=aVal;
+				}
+				if(aVal>maxVal)
+				{
+					maxVal=aVal;
+				}
+			}
+		}
+		minValMap[testVarID]=minVal;
+		maxValMap[testVarID]=maxVal;
+	}
+	else
+	{
+		minVal=minValMap[testVarID];
+		maxVal=maxValMap[testVarID];
+	}
+	double codingLen=1.0+log((double)subtreeVarIDs.size())/log(2.0);
+	double l=maxVal-minVal;
+	codingLen=codingLen+(log(l/0.1)/log(2.0));
+	nonleafNode->setCodingLength(codingLen);
+	return 0;
+}
+
+int 
+sortfunc(const void* first, const void* second)
+{
+	RegressionTree::Pair* d1=*((RegressionTree::Pair**)first);	
+	RegressionTree::Pair* d2=*((RegressionTree::Pair**)second);
+	int compstat=0;
+	if(d1->val<d2->val)
+	{
+		compstat=-1;
+	}
+	else if(d1->val>d2->val)
+	{
+		compstat=1;
+	}
+	return compstat;
+}
+//
+//Deserialize the binary tree
+//Reads the node type
+//Reads the classVarID and its name (returns with an error if the names are not the same)
+//If it is a leaf:
+//	Reads regressionMode
+//	If it is in regressionMode:
+//		Reads mean and variance
+//	If it is not in regressionMode: 
+//		Reads the outputValues
+//If it is not a leaf:
+//	Reads the testVarID and its name and its value (returns with an error if the names are not the same)
+//	Does the same for its children (assumes it has 2 children)
+int
+RegressionTree::deserialize(istream& iFile, map<int,Variable*>& varSet, RegressionTree* pp)
+{
+	parent = pp;
+	int tempType;
+	iFile >> tempType;
+	nType = (NodeType)tempType;
+	string cname;
+	iFile >> classVarID >>  cname ;
+	if (cname != varSet[classVarID]->getName())
+	{
+		cerr << "ERROR: The class variable name is not the same: we read \"" << cname << "\", ";
+		cerr << "should be \"" << varSet[classVarID]->getName() << "\"" << endl;
+		return -1;
+	}
+	if (nType == LEAF)
+	{
+		iFile >> mean >> variance;
+	}
+	else
+	{
+		string vname;
+		iFile >> testVarID >> vname >> testValue;
+		if (vname != varSet[testVarID]->getName())
+		{
+			cerr << "ERROR: The test variable name is not the same: we read \"" << vname << "\", ";
+			cerr << "should be \"" << varSet[testVarID]->getName() << "\"" << endl;
+			return -1;
+		}
+		children.clear();
+		for (int i=0;i<2;i++)
+		{
+			RegressionTree* tempChild = new RegressionTree;
+			tempChild->deserialize(iFile, varSet, this);
+			children[i] = tempChild;
+		}
+	}
+	return 0;
+}
+
+//Serialize the binary tree
+//Writes the node type
+//Writes the classVarID and its name
+//If it is a leaf:
+//	Writes regressionMode
+//	If it is in regressionMode:
+//		Writes mean and variance
+//	If it is not in regressionMode: 
+//		Writes the outputValues
+//If it is not a leaf:
+//	Writes the testVarID and its name and its value
+//	Does the same for its children (assumes it has 2 children)
+
+int
+RegressionTree::serialize(ostream& oFile, map<int,Variable*>& varSet)
+{
+	cout << "serialize: " << "classVarID:" << classVarID << endl;
+	oFile << (int)nType << "\t";
+	oFile << classVarID << "\t" << varSet[classVarID]->getName()  << "\t";
+	if (nType == LEAF)
+	{
+		oFile << mean << "\t" << variance << endl;
+	}
+	else
+	{
+		oFile << testVarID  << "\t" << varSet[testVarID]->getName()   << "\t" << testValue << endl;
+		for(auto cIter=children.begin();cIter!=children.end();cIter++)
+		{
+			cIter->second->serialize(oFile,varSet);
+		}
+	}
+	return 0;
+}
