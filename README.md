@@ -7,7 +7,7 @@
 ### 2. Predict on test sets with Models trained:
 ./regForest -t train0.txt -o out/ -k1 -l10 -n20 -b prior_merge.txt -d test0.txt -s out/model/regtree_node
 
-
+### Parameters:
 -t is the training data
 
 -o is the output directory
@@ -18,9 +18,9 @@
 
 -n is the number of trees
 
--d is the test set
+-d is the test data
 
--s is the prefix to saved trees
+-s is the prefix of saved models
 
 -b is the prior structure (potential regulators)
 
