@@ -9,9 +9,13 @@
 
 
 -t is the training data
+
 -o is the output directory
+
 -k is maxfactorsize (1 should be OK)
+
 -l is leaf size
+
 -n is the number of trees
 -d is the test set
 -s is the prefix to saved trees
