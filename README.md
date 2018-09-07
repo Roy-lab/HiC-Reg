@@ -17,12 +17,18 @@
 -l is leaf size
 
 -n is the number of trees
+
 -d is the test set
+
 -s is the prefix to saved trees
+
 -b is the prior structure (potential regulators)
 
 prior_merge.txt is a file to list the regulators, that is like this:
+
 CTCF_E    Count
+
 CTCF_P    Count
+
 CTCF_W    Count
 
