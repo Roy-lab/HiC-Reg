@@ -1,0 +1,2 @@
+To train models and make predictions in a new cell line:
+we need to remove the feature of test cell line from the training data and remove the feature of training cell line in the test data
