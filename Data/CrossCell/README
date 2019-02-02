@@ -1,2 +1,8 @@
-To train models and make predictions in a new cell line:
+### To train models and make predictions in a new cell line:
 we need to remove the feature of test cell line from the training data and remove the feature of training cell line in the test data
+
+### Train models:
+./regForest -t train0_Gm12878.txt -o out/ -k1 -l10 -n20 -b prior_merge_Gm12878toK562.txt -d test0_Gm12878.txt
+
+### Make predictions:
+./regForest -t train0_Gm12878.txt -o crosscell/ -k1 -l10 -n20 -b prior_merge_Gm12878toK562.txt -d test0_K562.txt -s out/model/regtree_node
