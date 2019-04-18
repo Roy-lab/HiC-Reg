@@ -57,4 +57,4 @@ CTCF_W    Count
 
 
 ## Memory Usage
-![alt text](https://github.com/Roy-lab/HiC-Reg/blob/master/Images/Memory_usage_Window_Merge_DepNormPerCell_Gm12878_summary.png "Logo Title Text 1")
+![alt text](https://github.com/Roy-lab/HiC-Reg/blob/master/Images/Memory_usage_Window_Merge_DepNormPerCell_Hmec_summary.png "Logo Title Text 1")
