@@ -53,3 +53,8 @@ CTCF_W    Count
 
 #### Make predictions:
 ./regForest -t Data/CrossCell/train0_Gm12878.txt -o out/ -k1 -l10 -n20 -b prior_merge_Gm12878toK562.txt -d Data/CrossCell/test0_K562.txt -s out/model/regtree_node
+
+
+
+## Memory Usage
+![alt text](https://github.com/Roy-lab/HiC-Reg/blob/master/Images/Memory_usage_Window_Merge_DepNormPerCell_Gm12878_summary.pdf "Gm12878")
