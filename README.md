@@ -1,17 +1,12 @@
 # HiC-Reg: In silico prediction of high-resolution Hi-C interaction matrices
 
-## Generate pair features as input for HiC-Reg:
+## Step1: Generate pair features as input for HiC-Reg:
 Program in Scripts/genPairFeatures/
 
-foldcv=5
-
-splittype=regionwise
-
-prerandomize_pairs=yes
-
-featype=Window
-
-./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab 1000000 $foldcv $splittype Gm12878_norm_featurefiles_PIQ_5kb.txt no out/ $prerandomize_pairs $featype
+### Usage:
+./genDatasetsRH HiCsparseMatrix maxdistance foldcv splittype[regionwise|pairwise] featureinputfile correlation[yes|no] outputdir prerandomize_pairs[yes|no] featype[Window|PIQ]
+### Example: 
+./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab 1000000 5 regionwise Gm12878_norm_featurefiles_PIQ_5kb.txt no out/ yes Window
 
 
 
