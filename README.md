@@ -20,6 +20,13 @@ Program in Scripts/genPairFeatures/
 - prerandomize_pairs: pre-randomize the pairs in the sparse hic matrix or not.
 - featype: 1)Pconcat: generate feature signal for region1 and region2. 2) Window: generate feature signal for region1 and region2, and average feature signal for the window between these two regions. 3) Outerprod: calculate the output product of the features in region1 and features in region2.
 
+#### Input Files:
+Gm12878_norm_featurefiles_test.txt
+```
+H3k4me1	/royfs_write/szhang/e_p_project/hic_for_ripple/features_fastq/Gm12878_5000bp_norm/Gm12878_RawData_5000bp_seqdepth_norm_H3k4me1.txt	C
+H3k4me2	/royfs_write/szhang/e_p_project/hic_for_ripple/features_fastq/Gm12878_5000bp_norm/Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
+```
+
 #### Example: 
 ./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab 1000000 5 regionwise Gm12878_norm_featurefiles_PIQ_5kb.txt no out/ yes Window
 
