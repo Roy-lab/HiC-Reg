@@ -68,13 +68,16 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 - -s is the prefix of saved models
 - -b is the prior structure (potential regulators)
 
-prior_merge.txt is a file to list the regulators, that is like this:
-
+#### Input Files:
+1. prior_merge.txt is a file to list the regulators, that is like this:
+```
 CTCF_E    Count
-
 CTCF_P    Count
-
 CTCF_W    Count
+H3k4me1_E    Count
+H3k4me1_P    Count
+H3k4me1_W    Count
+```
 
 ### 3. Make predictions in a new cell line:
 #### Train models:
