@@ -1,4 +1,6 @@
 # HiC-Reg: In silico prediction of high-resolution Hi-C interaction matrices
+![GitHub Logo](/Images/HiC-Reg.png)
+Format: ![Alt Text](url)
 
 ## Step 1: Generate pair features as input for HiC-Reg:
 ### Step 1.1: Generate PAIR-CONCAT or WINDOW features:
