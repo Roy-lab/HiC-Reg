@@ -22,15 +22,16 @@ Program in Scripts/genPairFeatures/
 
 #### Input Files:
 1. HiCsparseMatrix: Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab
+
 Column1: region1 Column2: region2 Column3: HiC count (tab deliminated)
 ```
 chr17_0_5000	chr17_5000_10000	485.3207854051
 chr17_0_5000	chr17_10000_15000	212.4988640932
-chr17_5000_10000	chr17_10000_15000	479.2565378381
 chr17_0_5000	chr17_15000_20000	130.1059543547
 ```
-2. Gm12878_norm_featurefiles_test.txt
-Column1: mark name Column2: feature signal file Column3: data type, C for Chip-seq data, M for motif data (tab deliminated)
+2. featureinputfile: Gm12878_norm_featurefiles_test.txt
+
+Column1: mark name Column2: feature signal file Column3: source data type, C for Chip-seq data, M for motif data (tab deliminated)
 ```
 H3k4me1	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me1.txt	C
 H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
