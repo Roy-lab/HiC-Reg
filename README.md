@@ -1,6 +1,7 @@
 # HiC-Reg: In silico prediction of high-resolution Hi-C interaction matrices
 
-## Step1: Generate pair features as input for HiC-Reg:
+## Step 1: Generate pair features as input for HiC-Reg:
+### Step 1.1: Generate PAIR-CONCAT or WINDOW features:
 Program in Scripts/genPairFeatures/
 
 #### Usage:
@@ -45,6 +46,9 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ```
 ./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs_100.tab 1000000 5 regionwise Gm12878_norm_featurefiles_test.txt no out/ yes Window
 ```
+
+### Step 1.2: Generate MULTI-CELL features:
+
 
 
 ## Step2: Train HiC-Reg models and make predictions
