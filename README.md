@@ -47,7 +47,7 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ```
 
 
-## Run HiC-Reg:
+## Step2: Run HiC-Reg:
 ### 1. Train on train.txt and Predict on hard test set:
 ./regForest -t train0.txt -o out/ -k1 -l10 -n20 -b prior_merge.txt -d test0.txt
 
