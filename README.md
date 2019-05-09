@@ -21,7 +21,7 @@ Program in Scripts/genPairFeatures/
 - featype: 1)Pconcat: generate feature signal for region1 and region2. 2) Window: generate feature signal for region1 and region2, and average feature signal for the window between these two regions. 3) Outerprod: calculate the output product of the features in region1 and features in region2.
 
 #### Input Files:
-1. HiCsparseMatrix: Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab
+1.HiCsparseMatrix: Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab
 
 Column1: region1 Column2: region2 Column3: HiC count (tab deliminated)
 ```
@@ -29,7 +29,7 @@ chr17_0_5000	chr17_5000_10000	485.3207854051
 chr17_0_5000	chr17_10000_15000	212.4988640932
 chr17_0_5000	chr17_15000_20000	130.1059543547
 ```
-2. featureinputfile: Gm12878_norm_featurefiles_test.txt
+2.featureinputfile: Gm12878_norm_featurefiles_test.txt
 
 Column1: mark name Column2: feature signal file Column3: source data type, C for Chip-seq data, M for motif data (tab deliminated)
 ```
