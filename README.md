@@ -19,9 +19,9 @@ Program in Scripts/genPairFeatures/
 - outputdir: path for output directory.
 - prerandomize_pairs: pre-randomize the pairs in the sparse hic matrix or not.
 - featype: 
- - 1)Pconcat: generate feature signal for region1 and region2. 
- - 2) Window: generate feature signal for region1 and region2, and average feature signal for the window between these two regions. 
- - 3) Outerprod: calculate the output product of the features in region1 and features in region2.
+  - Pconcat: generate feature signal for region1 and region2. 
+  - Window: generate feature signal for region1 and region2, and average feature signal for the window between these two regions. 
+  - Outerprod: calculate the output product of the features in region1 and features in region2.
 
 #### Input Files:
 1.HiCsparseMatrix: Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab
