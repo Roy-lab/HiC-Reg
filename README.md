@@ -7,6 +7,10 @@ Program in Scripts/genPairFeatures/
 ```
 ./genDatasetsRH HiCsparseMatrix maxdistance foldcv splittype[regionwise|pairwise] featureinputfile correlation[yes|no] outputdir prerandomize_pairs[yes|no] featype[Window|Pconcat|Outerprod]
 ```
+
+- region
+- pair
+
 #### Arguments:
 ```
 - HiCsparseMatrix: sparse hic matrix
