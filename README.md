@@ -5,7 +5,7 @@ Program in Scripts/genPairFeatures/
 
 #### Usage:
 ```
-./genDatasetsRH HiCsparseMatrix maxdistance foldcv splittype[regionwise|pairwise] featureinputfile correlation[yes|no] outputdir prerandomize_pairs[yes|no] featype[Window|Pconcat|Outerprod]
+./genDatasetsRH HiCsparseMatrix maxdistance foldcv splittype[regionwise|pairwise] featureinputfile correlation[yes|no] outputdir prerandomize_pairs[yes|no] featype[Window|Pconcat]
 ```
 
 #### Arguments:
@@ -23,7 +23,6 @@ Program in Scripts/genPairFeatures/
 - featype: 
   - Pconcat: generate feature signal for region1 and region2. 
   - Window: generate feature signal for region1 and region2, and average feature signal for the window between these two regions. 
-  - Outerprod: calculate the output product of the features in region1 and features in region2.
 
 #### Input Files:
 1.HiCsparseMatrix: Gm12878_chr17_5kb_SQRTVC_counts_pairs_100.tab
