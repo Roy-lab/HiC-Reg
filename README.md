@@ -47,7 +47,7 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ```
 
 
-## Step2: Run HiC-Reg:
+## Step2: Train HiC-Reg models and make predictions
 ### 1. Training mode:
 #### Train on training data and Predict on test set:
 ```
@@ -79,7 +79,7 @@ H3k4me1_P    Count
 H3k4me1_W    Count
 ```
 
-### 3. Make predictions in a new cell line:
+## 3. Make predictions in a new cell line:
 #### Train models:
 ./regForest -t Data/CrossCell/train0_Gm12878.txt -o out/ -k1 -l10 -n20 -b prior_merge_Gm12878toK562.txt -d Data/CrossCell/test0_Gm12878.txt 
 
