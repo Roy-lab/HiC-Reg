@@ -13,7 +13,9 @@ Program in Scripts/genPairFeatures/
 - HiCsparseMatrix: sparse hic matrix
 - maxdistance: max genomic distance for pair of regions
 - foldcv: number of CV folds
-- splittype: 1) regionwise--split the total regions in the sparse hic matrix into N folds. 2) pairwise--split the total pairs in the sparse hic matrix into N folds.
+- splittype: 
+  - regionwise--split the total regions in the sparse hic matrix into N folds. 
+  - pairwise--split the total pairs in the sparse hic matrix into N folds.
 - featureinputfile: input file with path for each feature signal, see Gm12878_norm_featurefiles_test.txt for example.
 - correlation: calculate the correlation of features in region1 and features in region2 or not.
 - outputdir: path for output directory.
