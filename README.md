@@ -58,15 +58,15 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ```
 ./regForest -t train0.txt -o out/ -k1 -l10 -n20 -b prior_merge.txt -d test0.txt -s out/model/regtree_node
 ```
-### Arguments:
+#### Arguments:
 - -t is the training data
 - -o is the output directory
 - -k is maxfactorsize (1 should be OK)
 - -l is leaf size
 - -n is the number of trees
+- -b is the prior structure (potential regulators), see prior_merge.txt.
 - -d is the test data
 - -s is the prefix of saved models
-- -b is the prior structure (potential regulators)
 
 #### Input Files:
 1. prior_merge.txt is a file to list the regulators, that is like this:
@@ -78,8 +78,17 @@ H3k4me1_E    Count
 H3k4me1_P    Count
 H3k4me1_W    Count
 ```
+2. training and test data:
+```
+Pair	H3k4me1_E	H3k4me1_P	H3k4me1_W	Distance	Count
+chr17_0_5000-chr17_10000_15000	0.714904	3.76434	0.83982	5000	5.36363
+chr17_0_5000-chr17_20000_25000	0.714904	0.615587	2.11178	15000	4.8556
+chr17_0_5000-chr17_25000_30000	0.714904	0.881374	1.73773	20000	4.76591
+chr17_0_5000-chr17_35000_40000	0.714904	6.57495	1.55514	30000	4.57156
+```
 
-## 3. Make predictions in a new cell line:
+
+## Application: Make predictions in a new cell line:
 #### Train models:
 ./regForest -t Data/CrossCell/train0_Gm12878.txt -o out/ -k1 -l10 -n20 -b prior_merge_Gm12878toK562.txt -d Data/CrossCell/test0_Gm12878.txt 
 
