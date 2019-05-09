@@ -38,8 +38,9 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ```
 
 #### Example: 
-./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab 1000000 5 regionwise Gm12878_norm_featurefiles_PIQ_5kb.txt no out/ yes Window
-
+```
+./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab 1000000 5 regionwise Gm12878_norm_featurefiles_test.txt no out/ yes Window
+```
 
 
 ## Run HiC-Reg:
