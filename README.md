@@ -14,17 +14,26 @@ Program in Scripts/genPairFeatures/
 - maxdistance: max genomic distance for pair of regions
 - foldcv: number of CV folds
 - splittype: 1) regionwise--split the total regions in the sparse hic matrix into N folds. 2) pairwise--split the total pairs in the sparse hic matrix into N folds.
-- featureinputfile: input file with path for each feature signal, see Gm12878_norm_featurefiles_PIQ_5kb.txt for example.
+- featureinputfile: input file with path for each feature signal, see Gm12878_norm_featurefiles_test.txt for example.
 - correlation: calculate the correlation of features in region1 and features in region2 or not.
 - outputdir: path for output directory.
 - prerandomize_pairs: pre-randomize the pairs in the sparse hic matrix or not.
 - featype: 1)Pconcat: generate feature signal for region1 and region2. 2) Window: generate feature signal for region1 and region2, and average feature signal for the window between these two regions. 3) Outerprod: calculate the output product of the features in region1 and features in region2.
 
 #### Input Files:
-Gm12878_norm_featurefiles_test.txt
+1. HiCsparseMatrix: Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab
+Column1: region1 Column2: region2 Column3: HiC count (tab deliminated)
 ```
-H3k4me1	/royfs_write/szhang/e_p_project/hic_for_ripple/features_fastq/Gm12878_5000bp_norm/Gm12878_RawData_5000bp_seqdepth_norm_H3k4me1.txt	C
-H3k4me2	/royfs_write/szhang/e_p_project/hic_for_ripple/features_fastq/Gm12878_5000bp_norm/Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
+chr17_0_5000	chr17_5000_10000	485.3207854051
+chr17_0_5000	chr17_10000_15000	212.4988640932
+chr17_5000_10000	chr17_10000_15000	479.2565378381
+chr17_0_5000	chr17_15000_20000	130.1059543547
+```
+2. Gm12878_norm_featurefiles_test.txt
+Column1: mark name Column2: feature signal file Column3: data type, C for Chip-seq data, M for motif data (tab deliminated)
+```
+H3k4me1	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me1.txt	C
+H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ```
 
 #### Example: 
