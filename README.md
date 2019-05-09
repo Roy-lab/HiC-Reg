@@ -4,7 +4,9 @@
 Program in Scripts/genPairFeatures/
 
 ### Usage:
+```
 ./genDatasetsRH HiCsparseMatrix maxdistance foldcv splittype[regionwise|pairwise] featureinputfile correlation[yes|no] outputdir prerandomize_pairs[yes|no] featype[Window|PIQ]
+```
 ### Example: 
 ./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs.tab 1000000 5 regionwise Gm12878_norm_featurefiles_PIQ_5kb.txt no out/ yes Window
 
