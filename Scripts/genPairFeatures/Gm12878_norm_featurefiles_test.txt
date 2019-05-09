@@ -1,0 +1,2 @@
+H3k4me1	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me1.txt	C
+H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
