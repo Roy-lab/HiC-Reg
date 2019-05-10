@@ -138,11 +138,19 @@ Column2: Count (i.e. the header of the last column in training/test data)
 
 
 ## Application: Make predictions in a new cell line:
-#### Train models:
-./regForest -t Data/CrossCell/train0_Gm12878.txt -o out/ -k1 -l10 -n20 -b prior_merge_Gm12878toK562.txt -d Data/CrossCell/test0_Gm12878.txt 
-
-#### Make predictions:
-./regForest -t Data/CrossCell/train0_Gm12878.txt -o out/ -k1 -l10 -n20 -b prior_merge_Gm12878toK562.txt -d Data/CrossCell/test0_K562.txt -s out/model/regtree_node
+### Train models using training data in Gm12878 and make predictions in K562:
+```
+./regForest -t Examples/Data/Gm12878_chr17_WINDOW_train0.txt -o Examples/out/ -k1 -l10 -n20 -b Examples/Data/prior_window.txt -d Examples/Data/K562_chr17_WINDOW_test0.txt
+```
+#### Arguments:
+- -t is the training data in cell line 1
+- -d is the test data in cell line 2
+- -o is the output directory
+- -k is maxfactorsize (1 should be OK)
+- -l is leaf size
+- -n is the number of trees
+- -b is the prior structure (potential regulators), see Data/prior_merge.txt.
+- -s is the prefix of saved models
 
 
 
