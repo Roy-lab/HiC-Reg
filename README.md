@@ -3,7 +3,7 @@
 
 
 ## Step 1: Generate pair features as input for HiC-Reg:
-### Step 1.1: Generate PAIR-CONCAT or WINDOW features:
+### 1.1: Generate PAIR-CONCAT or WINDOW features:
 Program in Scripts/genPairFeatures/
 
 #### Usage:
@@ -49,7 +49,17 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs_100.tab 1000000 5 regionwise Gm12878_norm_featurefiles_test.txt no out/ yes Window
 ```
 
-### Step 1.2: Generate MULTI-CELL features:
+### 1.2: Generate MULTI-CELL features:
+Program in Scripts/genMULTICELLfeats/
+#### Usage:
+```
+python gen-MULTICELL-features.py --inpath ./  --chr 17 --ncv 2 --outpath ./
+```
+#### Arguments:
+- --inpath: path of input feature data
+- --chr: chromosome of input feature data
+- --ncv: number of CV folds
+- --outpath: path of output MULTI-CELL feature data
 
 
 
