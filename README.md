@@ -137,14 +137,14 @@ Column2: Count (i.e. the header of the last column in training/test data)
 (Saved regression tree models for tree 0, examples in Examples/out/)
 
 
-## Application: Make predictions in a new cell line:
+## Application: Make predictions in a new cell line
 ### Train models using training data in Gm12878 and make predictions in K562:
 ```
 ./regForest -t Examples/Data/Gm12878_chr17_WINDOW_train0.txt -o Examples/out/ -k1 -l10 -n20 -b Examples/Data/prior_window.txt -d Examples/Data/K562_chr17_WINDOW_test0.txt
 ```
 #### Arguments:
-- -t is the training data in cell line 1
-- -d is the test data in cell line 2
+- -t is the training data in cell line 1 (Gm12878)
+- -d is the test data in cell line 2 (K562)
 - -o is the output directory
 - -k is maxfactorsize (1 should be OK)
 - -l is leaf size
