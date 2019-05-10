@@ -3,7 +3,7 @@
 
 
 ## Step 1: Generate pair features as input for HiC-Reg:
-### 1.1: Generate PAIR-CONCAT or WINDOW features:
+### 1.1 Generate PAIR-CONCAT or WINDOW features:
 Program in Scripts/genPairFeatures/
 
 #### Usage:
@@ -48,7 +48,7 @@ H3k4me2	Gm12878_RawData_5000bp_seqdepth_norm_H3k4me2.txt	C
 ./genDatasetsRH Gm12878_chr17_5kb_SQRTVC_counts_pairs_100.tab 1000000 5 regionwise Gm12878_norm_featurefiles_test.txt no out/ yes Window
 ```
 
-### 1.2: Generate MULTI-CELL features:
+### 1.2 Generate MULTI-CELL features:
 Program in Scripts/genMULTICELLfeats/
 #### Usage:
 ```
@@ -118,7 +118,7 @@ Column2: Count (i.e. the header of the last column in training/test data)
 
 #### Output Files:
 1. testset_error.txt
-Predictions on the test data:
+(Predictions on the test data)
 - Column1: Pair of two regions
 - Column2: True HiC Count for this pair in the log scale 	
 - Column3: Predicted HiC Count for this pair in the log scale 	
@@ -126,7 +126,7 @@ Predictions on the test data:
 - Column5: genomic distance of the two regions
 
 2. trainset_error.txt
-Predictions on the training data:
+(Predictions on the training data)
 - Column1: Pair of two regions
 - Column2: True HiC Count for this pair in the log scale 	
 - Column3: Predicted HiC Count for this pair in the log scale 	
@@ -134,7 +134,7 @@ Predictions on the training data:
 - Column5: genomic distance of the two regions
 
 3. regtree_node_0.txt
-Saved regression tree models for tree 0.
+(Saved regression tree models for tree 0.)
 
 
 ## Application: Make predictions in a new cell line:
