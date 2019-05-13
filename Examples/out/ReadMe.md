@@ -1,4 +1,4 @@
-## Exammples of output directory with training models and predictions from HiC-Reg
+## Examples of output directory with training models and predictions from HiC-Reg
 #### Output Files:
 1. testset_error.txt
 (Predictions on the test data)
