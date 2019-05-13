@@ -6,8 +6,15 @@ distance=data(:,end);
 Ytrue=data(:,1);
 Ypred=data(:,2);
 
-% compute global correlation and MSE:
-[cc,mse]=assessPerformance(Ytrue,Ypred);
+% compute global correlation of true and predicted counts and MSE:
+cc=corrcoef(Ytrue,Ypred);
+cc=cc(1,2);
+if(size(Ypred,1)==1)
+  mse=(sum((Ypred-Ytrue).^2))/size(Ypred,2);
+else
+  mse=(sum((Ypred-Ytrue).^2))/size(Ypred,1);
+end
+
 fprintf('Overall CV: cc=%.3f  mse=%.3f\n',cc,mse);
 
 % compute distance-stratified correlation:
