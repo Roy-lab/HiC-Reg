@@ -1,4 +1,7 @@
 ## Scripts
+### aggregateSignalInRegion/
+Aggregate region-level features
+
 ### genPairFeatures/
 Generate PAIR-CONCAT or WINDOW features as input for HiC-Reg
 
