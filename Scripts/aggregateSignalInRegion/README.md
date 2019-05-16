@@ -1,4 +1,4 @@
-aggregateSignalInRegion
+# Aggregate region-level features
 
 #### Usage:
 ```
