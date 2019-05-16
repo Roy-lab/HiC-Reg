@@ -1,4 +1,4 @@
-### Tree path analysis:
+### 1. Tree path analysis:
 #### Usage:
 ```
 ./regForest_logcnt -t Examples/Data/Gm12878_chr17_WINDOW_train0.txt -o out/ -k1 -l10 -n20 -b Examples/Data/prior_window.txt -d Examples/Data/Gm12878_chr17_WINDOW_test0.txt -s Examples/out/regtree_node
@@ -53,7 +53,7 @@ chr17_10035000_10040000-chr17_10070000_10075000	30000		H3k79me2_W>	H3k9ac_P>	H3k
 - Last Column (n): True HiC Count for this pair in the log scale 	
 
 
-### Rules counting:
+### 2. Rules counting: how many times a feature or a pair of features are used to predict a test pair
 #### Usage:
 ```
 ./analyzePathv3 testset_featureanalysis.txt $level feature.txt outputfile
