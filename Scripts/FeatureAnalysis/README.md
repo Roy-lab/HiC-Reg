@@ -40,13 +40,12 @@ Column1: feature set (header of column 2 to second last column) in training/test
 Column2: Count (i.e. the header of the last column in training/test data)
 
 #### Output Files:
-1. testset_featureanalysis.txt
+1. testset_featureanalysis.txt (tree path rules)
 ```
 chr17_10035000_10040000-chr17_10070000_10075000	30000		H3k27ac_W>	Distance<=	TBP_P>	3.1667	4.28671
 chr17_10035000_10040000-chr17_10070000_10075000	30000		Dnase_W>	Ctcf_W<=	Dnase_P<=	H3k9ac_P<=	H3k9me3_P>	H3k4me1_P>	3.52945	4.28671
 chr17_10035000_10040000-chr17_10070000_10075000	30000		H3k79me2_W>	H3k9ac_P>	H3k4me2_W>	H3k4me1_P>	3.27295	4.28671
 ```
-(Predictions on the test data)
 - Column1: Pair of two regions
 - Column2: genomic distance of the two regions
 - Column 3 to n-2: feature rules for spliting the node, e.g. H3k27ac_W> (H3k27ac_W is used to split the node)
