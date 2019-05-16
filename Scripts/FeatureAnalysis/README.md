@@ -52,3 +52,9 @@ chr17_10035000_10040000-chr17_10070000_10075000	30000		H3k79me2_W>	H3k9ac_P>	H3k
 - Second last column (n-1): Predicted HiC Count for this pair for tree i in the log scale 
 - Last Column (n): True HiC Count for this pair in the log scale 	
 
+
+### Rules counting:
+#### Usage:
+```
+./analyzePathv3 testset_featureanalysis.txt $level feature.txt $outputfile 0 pairs_5LowHigherror_hard.txt 0 ${featurepath}/out.txt
+```
