@@ -83,4 +83,4 @@ chr17_10035000_10040000-chr17_10085000_10090000	0	0	0	0	0
 chr17_10035000_10040000-chr17_10095000_10100000	0	0	0	0	0
 ```
 - Column1: Pair of two regions
-- Column2-Column(n):counts of how many times a pair of features are used in the same tree path for making predictions
+- Column2-Column(n):counts of how many times a pair of features coexist in the same tree path for making predictions
