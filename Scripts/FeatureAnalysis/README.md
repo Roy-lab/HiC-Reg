@@ -66,4 +66,21 @@ chr17_10035000_10040000-chr17_10070000_10075000	30000		H3k79me2_W>	H3k9ac_P>	H3k
 
 #### Output Files:
 1. testset_featureanalysis_f1.txt
+```
+Pair	Ctcf_P-	Dnase_P-	H3k27ac_P-	H3k27me3_P-
+chr17_10035000_10040000-chr17_10070000_10075000	2	6	1	3
+chr17_10035000_10040000-chr17_10085000_10090000	4	6	2	3
+chr17_10035000_10040000-chr17_10095000_10100000	3	6	1	3
+```
+- Column1: Pair of two regions
+- Column2-Column(n):counts of how many times each feature is used along the tree path for making predictions
+
 2. testset_featureanalysis_f2.txt
+```
+Pair	Ctcf_E-Ctcf_E	Ctcf_E-Dnase_E	Ctcf_E-H3k27ac_E	Ctcf_E-H3k27me3_E	Ctcf_E-H3k36me3_E
+chr17_10035000_10040000-chr17_10070000_10075000	0	0	0	0	0
+chr17_10035000_10040000-chr17_10085000_10090000	0	0	0	0	0
+chr17_10035000_10040000-chr17_10095000_10100000	0	0	0	0	0
+```
+- Column1: Pair of two regions
+- Column2-Column(n):counts of how many times a pair of features are used in the same tree path for making predictions
