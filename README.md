@@ -1,8 +1,10 @@
 # HiC-Reg: In silico prediction of high-resolution Hi-C interaction matrices
 HiC-Reg is a novel approach to predict contact counts from one-dimensional regulatory signals such as epigenetic marks and regulatory protein binding. HiC-Reg provides a powerful framework to generate high-resolution profiles of contact counts that can be used to study individual locus level interactions as well as higher-order organizational units of the genome.
-![GitHub Logo](/Images/HiC-Reg.png)
 
 Zhang, S., Chasman, D., Knaack, S. et al. In silico prediction of high-resolution Hi-C interaction matrices. Nat Commun 10, 5449 (2019). https://doi.org/10.1038/s41467-019-13423-8
+
+![GitHub Logo](/Images/HiC-Reg.png)
+
 
 ## Step 1: Generate pair features as input for HiC-Reg:
 ### 1.0 Aggregate region-level features:
